@@ -5,6 +5,7 @@
 
 struct State
 {
+	static size_t next_index;
 	static std::vector<State*> states;
 	static size_t active, nactive;
 	static void setActive(size_t i);
@@ -15,6 +16,7 @@ struct State
 
 	float ti_dur = 1, to_dur = 1;
 
+	size_t index = ++next_index;
 	cumt::ThingSet set;
 
 	virtual void transOut(float t)

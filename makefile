@@ -1,8 +1,8 @@
 SHELL=/bin/bash
 
 CXX=clang++
-CXX_LIBS=-lcumt -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
-CXX_FLAGS=--std=c++17
+CXX_LIBS=-lcumt -lfizzyx -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
+CXX_FLAGS=--std=c++17 -g -O3
 
 MINGW=x86_64-w64-mingw32-g++
 MINGW_LIBS=-lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
@@ -24,9 +24,9 @@ test-win: src/*
 
 EMCC_ENV=~/Downloads/installs/emsdk/emsdk_env.sh
 EMCC=em++
-EMCC_FLAGS= -s WASM=1																							\
+EMCC_FLAGS= -s WASM=1 \
 			-s USE_SDL=2 -s USE_SDL_TTF=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_MIXER=2 \
-			--preload-file res/																					\
+			--preload-file res/ \
 			--std=c++17 -O3
 test-web: src/*
 	mkdir -p src_w/cumt

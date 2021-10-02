@@ -35,8 +35,8 @@ inline void loadResources()
 	RenderData::loadFont("res/ProggyTiny.ttf", 12);
 	RenderData::loadFont("res/nicomoji-plus_1.11.ttf", 12);
 	RenderData::loadFont("res/m6x11.ttf", 14);
-	TD_DEF_L = render::TextData{0, render::TextData::LEFT};
-	TD_DEF_C = render::TextData{0, render::TextData::CENTRE};
-	TD_DEF_R = render::TextData{0, render::TextData::RIGHT};
+	TD_DEF_L = render::TextData{0, render::TextData::LEFT  };//, {1,1}, 0, {0,0,0,255}};
+	TD_DEF_C = render::TextData{0, render::TextData::CENTRE};//, {1,1}, 0, {0,0,0,255}};
+	TD_DEF_R = render::TextData{0, render::TextData::RIGHT };//, {1,1}, 0, {0,0,0,255}};
 	TD_JP_C = render::TextData{1, render::TextData::CENTRE};
 }

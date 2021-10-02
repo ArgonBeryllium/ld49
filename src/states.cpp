@@ -3,6 +3,7 @@
 
 using namespace cumt;
 
+size_t State::next_index = 0;
 std::vector<State*> State::states = {};
 size_t State::active = 0;
 size_t State::nactive = 0;
@@ -21,6 +22,7 @@ void State::allStart()
 {
 	for(State* s : states)
 		s->start();
+	getActive()->load();
 }
 void State::update()
 {

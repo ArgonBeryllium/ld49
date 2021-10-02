@@ -1,8 +1,10 @@
 #include <cumt/cumt.h>
 #include <shitrndr.h>
+#include <fizzyx/fizzyx.h>
 #include "resources.h"
 #include "states.h"
 #include "expirables.h"
+#include "objects.h"
 
 using namespace cumt;
 
@@ -28,6 +30,7 @@ int CUMT_MULP_MAIN()
 }
 
 using namespace shitrndr;
+using namespace fizzyx;
 
 struct S_Splash : State
 {
@@ -59,41 +62,46 @@ struct S_Splash : State
 
 		if(nactive==active && FD::time>4) setActive(1);
 	}
+	void onKey(SDL_Keycode key) override
+	{
+		State::setActive(1);
+	}
 };
-struct S_A : State
+
+
+struct S_Test : State
 {
+	ThingSet set;
+	World w;
+	Player* pr;
+	Platform* pl;
 	void start() override
 	{
-		ti_dur = .2;
+		FizThing::wld = &w;
+		w.ec->addEffector(new Eff_Gravity());
+		pr = set.instantiate(new Player());
+		pl = set.instantiate(new Platform());
+		set.instantiate(new FizThing({common::frand()*12-6, -3}));
+	}
+	void load() override
+	{
+		bg_col = {255,255,255,255};
+		Thing2D::view_scale = .2;
 	}
 	void loop() override
 	{
-		render::pattern::checkerBoard(0, FD::time*30, 30);
-		State::loop();
+		w.step(FD::delta);
+		set.update();
+		set.render();
 	}
 	void onKey(SDL_Keycode key) override
 	{
-		if(key==SDLK_SPACE) State::setActive(2);
-	}
-};
-struct S_B : State
-{
-	void transIn(float t) override
-	{
-		SetColour({0,0,0,255});
-		render::pattern::noise(0,0,1-t,5,20);
-	}
-	void transOut(float t) override { transIn(1-t); }
-	void loop() override
-	{
-		SetColour({25,35,75,255});
-		SDL_RenderFillRect(ren, 0);
-		render::text(WindowProps::getSize()/2, "ツ ", TD_JP_C);
-		State::loop();
-	}
-	void onKey(SDL_Keycode key) override
-	{
-		if(key==SDLK_SPACE) State::setActive(1);
+		switch(key)
+		{
+			case SDLK_SPACE:
+				pr->b->vel.y = 5;
+				break;
+		}
 	}
 };
 
@@ -104,7 +112,8 @@ void gameStart()
 
 	loadResources();
 
-	State::states = {new S_Splash(), new S_A(), new S_B()};
+	//State::states = {new S_Splash(), new S_Test()};
+	State::states = {new S_Test()};
 	State::allStart();
 }
 
@@ -112,7 +121,10 @@ void gameLoop()
 {
 	State::getActive()->loop();
 	State::update();
+	SetColour({0,0,0,255});
+	FillRect({0,0,10,11});
 	common::renderFPS({});
+	render::text({5,6}, std::to_string(State::getActive()->index), TD_DEF_L);
 }
 void gameKeyDown(const SDL_Keycode& key)
 {
