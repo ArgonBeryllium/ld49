@@ -16,7 +16,7 @@ struct State
 
 	float ti_dur = 1, to_dur = 1;
 
-	size_t index = ++next_index;
+	size_t index = next_index++;
 	cumt::ThingSet set;
 
 	virtual void transOut(float t)

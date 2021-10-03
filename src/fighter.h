@@ -1,6 +1,7 @@
 #pragma once
 #include "objects.h"
 #include "platform.h"
+#include "effects.h"
 
 struct Fighter : FizThing
 {
@@ -13,7 +14,11 @@ struct Fighter : FizThing
 	float a_strength = .3, a_cooldown = .2;
 	float t_ac = 0, t_j = 0;
 	
-	Fighter(v2f pos_ = {}, v2f scl_ = {1,1}, float mass_ = 1) : FizThing(pos_, scl_, mass_) {}
+	Fighter(v2f pos_ = {}, v2f scl_ = {1,1}, float mass_ = 1) : FizThing(pos_, scl_, mass_)
+	{
+		b->bitmask = 0b00000010;
+		b->tr.rot = M_PIf32;
+	}
 
 	virtual void move()
 	{
@@ -27,9 +32,11 @@ struct Fighter : FizThing
 	virtual void jump()
 	{
 		if(t_j>0) return;
-		t_j = .1;
-		if(!Platform::instance->onPlatform(b, 1.5)) return;
-		b->vel = getUp()*jump_h;
+		t_j = .2;
+		if(!Platform::instance->onPlatform(b, .1)) return;
+		b->tr.pos.y += .1;
+		b->vel.y = jump_h;
+		b->vel.x *= .8;
 		Platform::instance->applyForce(b->tr.pos.x, b->mass*.1);
 	}
 	virtual void takeDamage(float d)
@@ -38,7 +45,7 @@ struct Fighter : FizThing
 	}
 	virtual void die()
 	{
-		parent_set->scheduleDestroy(this);
+		active = visible = false;
 		std::cout << "ouch\n";
 	}
 	
@@ -49,13 +56,16 @@ struct Fighter : FizThing
 		float life;
 
 		Attack(Fighter* parent_, v2f pos_, float strength_, float life_ = .3, v2f scl_ = {1,1}) : Thing2D(pos_, scl_), parent(parent_), strength(strength_), life(life_) {}
-		void render() override
+		void render() override {}
+		/*
 		{
 			shitrndr::SetColour({255,120,0,255});
 			SDL_Rect r = getRect();
-			shitrndr::FillCircle(r.x+r.w/2, r.y+r.h/2, r.w/2.f*easings::easeOutElastic(life));
-			shitrndr::DrawCircle(r.x+r.w/2, r.y+r.h/2, r.w/2.f);
+			r.x -= r.w/2;
+			r.y -= r.h/2;
+			FillRect(r);
 		}
+		*/
 		void update() override
 		{
 			if(life<=0)
@@ -70,8 +80,9 @@ struct Fighter : FizThing
 				if(cumt::aabb::getOverlap(getRect(), o->getRect()))
 				{
 					o->takeDamage(strength);
-					o->b->vel = (o->b->tr.pos-(pos*v2f(1,-1))).normalised()*strength*10;
+					o->b->vel = (o->b->tr.pos-(pos*v2f(1,-1))).normalised()*strength*50/o->b->mass;
 					life = 0;
+					parent_set->instantiate(new PunchFX(pos-scl, strength, scl));
 					break;
 				}
 			}
@@ -105,7 +116,7 @@ struct Fighter : FizThing
 			b->vel.x = b->vel.x/std::abs(b->vel.x)*max_speed;
 
 		//drag
-		b->vel.x -= (b->vel.x>0?1:(b->vel.x<0?-1:0))*FD::delta*2;
+		b->vel -= b->vel.normalised()*FD::delta*.1;
 
 		if(pos.y>20 || health<=0) die();
 		else if(health<health_max) health += FD::delta*regen_rate;

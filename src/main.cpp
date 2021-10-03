@@ -2,6 +2,7 @@
 #include <fizzyx/fizzyx_solvers.h>
 #include <shitrndr.h>
 #include <fizzyx/fizzyx.h>
+#include <type_traits>
 
 #include "resources.h"
 #include "states.h"
@@ -10,6 +11,8 @@
 #include "platform.h"
 #include "player.h"
 #include "hazard.h"
+#include "enemies.h"
+#include "level.h"
 
 using namespace cumt;
 
@@ -23,7 +26,7 @@ int CUMT_MULP_MAIN()
 	InitParams ip;
 	ip.sr_ps = 2;
 
-	quickInit(960, 720, ip);
+	quickInit(960, 652, ip);
 	onLoop = &gameLoop;
 	onKey = &gameKeyDown;
 	gameStart();
@@ -36,7 +39,6 @@ int CUMT_MULP_MAIN()
 
 using namespace shitrndr;
 using namespace fizzyx;
-
 struct S_Splash : State
 {
 	float del = 2;
@@ -73,72 +75,6 @@ struct S_Splash : State
 	}
 };
 
-struct S_Test : State
-{
-	ThingSet set;
-	World w;
-	Player* pr;
-	Platform* pl;
-	void start() override
-	{
-		FizThing::wld = &w;
-		w.ec->addEffector(new Eff_Gravity());
-		pr = set.instantiate(new Player());
-		pl = set.instantiate(new Platform());
-		std::srand(FD::time);
-		set.instantiate(new Fighter({common::frand()*12-6, -3}));
-	}
-	void load() override
-	{
-		bg_col = {255,255,255,255};
-		Thing2D::view_scale = .2;
-	}
-	void loop() override
-	{
-		static float scd = 2;
-		if(scd<0)
-		{
-			scd = common::frand()+1;
-			float m = .5+common::frand()*1.5;
-			//set.instantiate(new Fighter({common::frand()*12-6, -10}, {m,m}, m));
-		}
-		scd -= FD::delta;
-
-		static float hcd = 2;
-		if(hcd<0)
-		{
-			hcd = common::frand()+2;
-			set.instantiate(new Hazard(common::frand()*12-6));
-		}
-		hcd -= FD::delta;
-
-		w.step(FD::delta);
-		set.update();
-		set.render();
-		SetColour({0,0,0,255});
-		v2i pp = Thing2D::spaceToScr({Platform::instance->getBalancePointX(), 0});
-		FillCircle(pp.x, pp.y, 3);
-		pp = Thing2D::spaceToScr({Platform::instance->getLimitsH().first, 0});
-		FillCircle(pp.x, pp.y, 4);
-		pp = Thing2D::spaceToScr({Platform::instance->getLimitsH().second, 0});
-		FillCircle(pp.x, pp.y, 4);
-	}
-	void onKey(SDL_Keycode key) override
-	{
-		switch(key)
-		{
-			case SDLK_z:
-				pr->jump();
-				break;
-			case SDLK_x:
-				pr->attack(v2f(pr->dir, 0));
-				break;
-			case SDLK_c:
-				pr->flop();
-				break;
-		}
-	}
-};
 
 void gameStart()
 {
@@ -147,8 +83,8 @@ void gameStart()
 
 	loadResources();
 
-	//State::states = {new S_Splash(), new S_Test()};
-	State::states = {new S_Test()};
+	//State::states = {new S_Splash(), new S_Level()};
+	State::states = {new S_Splash(), new S_Level(), new S_Loader(), new S_Win()};
 	State::allStart();
 }
 
@@ -157,9 +93,10 @@ void gameLoop()
 	State::getActive()->loop();
 	State::update();
 	SetColour({0,0,0,255});
-	FillRect({0,0,10,11});
+	FillRect({0,0,10,22});
 	common::renderFPS({});
 	render::text({5,6}, std::to_string(State::getActive()->index), TD_DEF_L);
+	//render::text({5,12}, std::to_string(Player::instance->parent_set->things_id.size()), TD_DEF_L);
 }
 void gameKeyDown(const SDL_Keycode& key)
 {

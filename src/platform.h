@@ -6,14 +6,13 @@ struct Platform : FizThing
 	static Platform* instance;
 	float av = 0;
 
-	Platform() : FizThing({0, 2}, {18, 2}, 0)
+	Platform() : FizThing({0, 2}, {8, 1}, 0)
 	{
 		instance = this;
 		b->onCollision = [](CollisionData cd, Body* self, Body* o)
 		{
 			Platform* ins = Platform::instance;
-			if(dynamic_cast<CircleCollider*>(o->col)) std::cout << "CUM\n";
-			ins->applyForce(o->tr.pos.x, o->vel.getLength()*v2f::dot(o->vel.normalised(), ins->getUp()*-1)*o->mass);
+			ins->applyForce(o->tr.pos.x, o->vel.getLength()*std::max(0.f,v2f::dot(o->vel.normalised(), ins->getUp()*-1))*o->mass);
 		};
 	}
 
@@ -26,14 +25,14 @@ struct Platform : FizThing
 		auto lims = getLimitsH();
 		return o->tr.pos.x > lims.first && o->tr.pos.x < lims.second;
 	}
-	inline bool withinV(const Body* o, float epsilon = .01)
+	inline bool withinV(const Body* o, float epsilon)
 	{
 		b->tr.scl.y += epsilon;
 		CollisionData cd = b->col->testCollision(o->col);
 		b->tr.scl.y -= epsilon;
 		return cd.colliding && v2f::dot(cd.normal, v2f(0,1))>0;
 	}
-	inline bool onPlatform(const Body* o, float epsilon = .01) { return withinH(o) && withinV(o, epsilon); }
+	inline bool onPlatform(const Body* o, float epsilon = .1) { return withinH(o) && withinV(o, epsilon); }
 
 	float getBalancePointX()
 	{
@@ -73,7 +72,7 @@ struct Platform : FizThing
 		b->tr.rot += av*FD::delta;
 
 		// limit angles & bounce on extremes
-		constexpr float ANGLE_LIMIT = M_PIf32*.3;
+		constexpr float ANGLE_LIMIT = M_PIf32*.2;
 		if(b->tr.rot>ANGLE_LIMIT)
 		{
 			b->tr.rot = ANGLE_LIMIT;
@@ -92,10 +91,11 @@ struct Platform : FizThing
 	void render() override
 	{
 		SDL_Rect r = getRect();
+		Copy(T_MT, {r.x-r.h*2, r.y+r.h/2, r.h*4, r.h*4});
 		r.x -= r.w/2;
 		r.y -= r.h/2;
 		SDL_RenderCopyEx(shitrndr::ren, T_PLATFORM, 0, &r, -b->tr.rot*180/M_PIf32, 0, SDL_FLIP_NONE);
-		FizThing::render();
+		//FizThing::render();
 	}
 };
 

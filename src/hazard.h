@@ -2,6 +2,7 @@
 #include "objects.h"
 #include "fighter.h"
 
+void shakeCam(float, float);
 struct Hazard : FizThing
 {
 	Hazard(float x, float r = 1, float mass_ = 4) : FizThing(v2f(x, -10), v2f(r*2,r*2), mass_)
@@ -13,7 +14,8 @@ struct Hazard : FizThing
 		b->onCollision = [](CollisionData cd, Body* self, Body* other)
 		{
 			Fighter* f = dynamic_cast<Fighter*>(FizThing::lookup[other]);
-			if(f) f->takeDamage(.5);
+			if(f) f->takeDamage(.8);
+			shakeCam(.2, .5);
 		};
 		b->postCollision = [](CollisionData cd, Body* self, Body* other)
 		{
@@ -22,13 +24,13 @@ struct Hazard : FizThing
 	}
 	void update() override
 	{
-		if(pos.y>20) parent_set->scheduleDestroy(this);
+		if(pos.y>20) active = visible = false;
 		FizThing::update();
 	}
 	void render() override
 	{
-		SetColour({static_cast<Uint8>(b->passive?55:255),0,0,255});
-		v2i pp = spaceToScr(pos-scl/2);
-		FillCircle(pp.x, pp.y, getScalar()*scl.x);
+		SDL_Rect r = getGoodRect();
+		if(b->passive) r.w = r.h = r.w*.8;
+		SDL_RenderCopyEx(ren, T_HAZARD, 0, &r, 90*b->vel.getLength(), 0, b->passive?SDL_FLIP_NONE:SDL_FLIP_HORIZONTAL);
 	}
 };

@@ -1,5 +1,7 @@
 #pragma once
 #include "fighter.h"
+#include "effects.h"
+#include <cumt/cumt_common.h>
 #include <shitrndr.h>
 
 struct Player : Fighter
@@ -9,13 +11,17 @@ struct Player : Fighter
 	bool floppin = 0, flopped = 0;
 	float t_flop = 0;
 
+	SDL_Texture* tex = T_P_IDLE;
+
 	static void onCollision(CollisionData cd, Body* self, Body* other)
 	{
-		if(instance->floppin && v2f::dot(cd.normal, v2f(0, -1))<.5)
+		if(instance->floppin && v2f::dot(cd.normal, v2f(0, -1))>0)
 		{
 			instance->floppin = 0;
 			instance->flopped = 1;
-			instance->parent_set->instantiate(new Attack(instance, instance->pos, instance->a_strength, .3, {3,2}));
+			instance->parent_set->instantiate(new Attack(instance, instance->pos, instance->a_strength*2, .3, {3,2}));
+			instance->parent_set->instantiate(new PunchFX(instance->pos, instance->a_strength*2, {3,2}));
+			shakeCam(.3, .3);
 		}
 	};
 
@@ -23,24 +29,29 @@ struct Player : Fighter
 	{
 		instance = this;
 		b->onCollision = &onCollision;
+		b->bitmask = 0b00000001;
 	}
-	void die() override
+
+	void takeDamage(float d) override
 	{
-		b->tr.pos = {0, 4};
-		std::cout << "YOU DIED\n";
-		health = health_max;
+		shakeCam(d);
+		health -= d;
 	}
+	void die() override;
 	void flop()
 	{
-		if(Platform::instance->onPlatform(b, .5) || t_flop > 0) return;
-		b->vel = {0, -25};
+		if(Platform::instance->onPlatform(b, 1) || t_flop > 0) return;
+		b->vel = {0, -50};
 		floppin = 1;
 		t_flop = 2;
 	}
 	void move() override
 	{
-		if(common::inVec().x) dir = common::inVec().x;
-		b->vel.x += FD::delta*common::inVec().x*acc;
+		if(common::inVec().x)
+			dir = common::inVec().x;
+		float d =  FD::delta*common::inVec().x*acc;
+		if(Platform::instance->onPlatform(b)) b->vel += d*getRight();
+		else b->vel.x += d*.5;
 	}
 	void update() override
 	{
@@ -54,9 +65,21 @@ struct Player : Fighter
 	}
 	void render() override
 	{
-		Fighter::render();
-		if(t_flop<=0)
-			shitrndr::SetColour({0,255,0,255});
-		shitrndr::FillRect(getRect());
+		if(floppin) tex = T_P_FALL;
+		else if(Input::getKey(SDLK_x)) tex = T_P_PUNCH;
+		else if(!Platform::instance->onPlatform(b)) tex = T_P_AIRBORNE;
+		else if(common::inVec().x) tex = T_P_RUN[int(FD::time*4)%2];
+		else tex = T_P_IDLE;
+		SDL_Rect r = getRect();
+		r.y -= r.h/2;
+		r.x -= r.w/2;
+		r.w *= 1.5;
+		RenderCopyEx(ren, tex, {0,0,48,32}, r, -b->tr.rot*180/M_PIf32+180, {16,16}, dir>0?SDL_FLIP_NONE:SDL_FLIP_HORIZONTAL);
+		std::string hpstr = "[";
+		for(int i = 0; i != 16; i++)
+			hpstr+= (i/16.f<health/health_max)?'=':' ';
+		hpstr += "]";
+		render::text({WindowProps::getWidth()/2, 5}, hpstr, TD_DEF_C);
+		render::text({WindowProps::getWidth()/2, 15}, t_flop<=0?"RDY":" ", TD_DEF_C);
 	}
 };

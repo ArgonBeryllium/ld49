@@ -11,11 +11,11 @@ using namespace shitrndr;
 
 struct FizThing : Thing2D
 {
+	static std::map<Body*, FizThing*> lookup;
+	static constexpr float MAX_VEL_Y = 10;
+
 	static World* wld;
 	Body* b;
-	static std::map<Body*, FizThing*> lookup;
-
-	static constexpr float MAX_VEL_Y = 10;
 
 	FizThing(v2f pos_ = {}, v2f scl_ = {1,1}, float mass_ = 1) : Thing2D(pos_, scl_)
 	{
@@ -33,8 +33,15 @@ struct FizThing : Thing2D
 		lookup.erase(b);
 		delete b;
 	}
-	inline v2f getRight() { return v2f(std::cos(b->tr.rot), std::sin(b->tr.rot)); }
-	inline v2f getUp() { return v2f(std::cos(b->tr.rot+M_PI_2f32), std::sin(b->tr.rot+M_PI_2f32)); }
+	inline v2f getRight() { return v2f(-std::cos(b->tr.rot), std::sin(b->tr.rot)); }
+	inline v2f getUp() { return v2f(-std::cos(b->tr.rot+M_PI_2f32), std::sin(b->tr.rot+M_PI_2f32)); }
+	SDL_Rect getGoodRect()
+	{
+		SDL_Rect r = getRect();
+		r.x -= r.w/2;
+		r.y -= r.h/2;
+		return r;
+	}
 	void update() override;
 	void render() override;
 };

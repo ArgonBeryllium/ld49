@@ -1,6 +1,7 @@
 #include "objects.h"
 #include "platform.h"
 #include "player.h"
+#include "level.h"
 using namespace shitrndr;
 
 void FizThing::update()
@@ -9,11 +10,12 @@ void FizThing::update()
 	if(Platform::instance->onPlatform(b))
 	{
 		v2f pu = Platform::instance->getUp();
-		b->tr.rot = std::atan2(pu.y, pu.x)+M_PI_2f32;
-		b->tr.pos += getUp()*FD::delta;
+		b->tr.rot = std::atan2(-pu.y, pu.x)-M_PI_2f32;
 	}
 	pos = b->tr.pos;
 	pos.y *= -1;
+
+	if(pos.y>26) active = false;
 }
 void FizThing::render()
 {
@@ -23,7 +25,14 @@ void FizThing::render()
 		render::line(b->tr.transformPoint(vs[i])*v2f(1,-1), b->tr.transformPoint(vs[(i+1)%vs.size()])*v2f(1,-1));
 }
 
+void Player::die()
+{
+	b->tr.pos = {0, 4};
+	S_Level::instance->scheduleReload();
+}
+
 World* FizThing::wld = 0;
 Platform* Platform::instance = 0;
 Player* Player::instance = 0;
 std::map<Body*, FizThing*> FizThing::lookup = {};
+Boss* Boss::inst = 0;
