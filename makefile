@@ -6,7 +6,7 @@ CXX_FLAGS=--std=c++17 -g -O3
 
 MINGW=x86_64-w64-mingw32-g++
 MINGW_LIBS=-lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
-MINGW_FLAGS=--std=c++17 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread
+MINGW_FLAGS=--std=c++17 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -fpermissive
 
 test: src/*
 	cowsay 'optimise the final build, dipshit'
@@ -14,9 +14,11 @@ test: src/*
 
 test-win: src/*
 	mkdir -p src_w/cumt
+	mkdir -p src_w/fizzyx
 	cp src/* src_w/
 	cp ~/scripts/cpp/cumt/src/cumt* src_w/cumt/
 	cp ~/scripts/cpp/shitrndr/src/shitrndr.h src_w/cumt/
+	cp ~/scripts/cpp/fizzyx/src/fizzyx* src_w/fizzyx/
 	./bracereplace.sh
 	
 	$(MINGW) src_w/*.cpp src_w/**/*.cpp $(MINGW_LIBS) $(MINGW_FLAGS) -o bin/win/test.exe
@@ -30,9 +32,11 @@ EMCC_FLAGS= -s WASM=1 \
 			--std=c++17 -O3
 test-web: src/*
 	mkdir -p src_w/cumt
+	mkdir -p src_w/fizzyx
 	cp src/* src_w/
 	cp ~/scripts/cpp/cumt/src/cumt* src_w/cumt/
 	cp ~/scripts/cpp/shitrndr/src/shitrndr.h src_w/cumt
+	cp ~/scripts/cpp/fizzyx/src/fizzyx* src_w/fizzyx/
 	./bracereplace.sh
 	source $(EMCC_ENV) && $(EMCC) src_w/*.cpp src_w/cumt/*.cpp $(EMCC_FLAGS) -o bin/index.html
 	rm src_w/ -rf
