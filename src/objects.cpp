@@ -1,12 +1,15 @@
 #include "objects.h"
+#include "platform.h"
+#include "player.h"
 using namespace shitrndr;
 
 void FizThing::update()
 {
-	CollisionData cd = b->col->testCollision(Platform::instance->b->col);
-	if(cd.colliding)
+	b->vel.y = std::min(b->vel.y, MAX_VEL_Y);
+	if(Platform::instance->onPlatform(b))
 	{
-		b->tr.rot = std::atan2(cd.normal.y, cd.normal.x)+M_PI_2f32;
+		v2f pu = Platform::instance->getUp();
+		b->tr.rot = std::atan2(pu.y, pu.x)+M_PI_2f32;
 		b->tr.pos += getUp()*FD::delta;
 	}
 	pos = b->tr.pos;
@@ -23,3 +26,4 @@ void FizThing::render()
 World* FizThing::wld = 0;
 Platform* Platform::instance = 0;
 Player* Player::instance = 0;
+std::map<Body*, FizThing*> FizThing::lookup = {};

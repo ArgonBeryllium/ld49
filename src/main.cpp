@@ -1,10 +1,15 @@
 #include <cumt/cumt.h>
+#include <fizzyx/fizzyx_solvers.h>
 #include <shitrndr.h>
 #include <fizzyx/fizzyx.h>
+
 #include "resources.h"
 #include "states.h"
 #include "expirables.h"
 #include "objects.h"
+#include "platform.h"
+#include "player.h"
+#include "hazard.h"
 
 using namespace cumt;
 
@@ -16,7 +21,7 @@ void renderSplash();
 int CUMT_MULP_MAIN()
 {
 	InitParams ip;
-	ip.sr_ps = 3;
+	ip.sr_ps = 2;
 
 	quickInit(960, 720, ip);
 	onLoop = &gameLoop;
@@ -68,7 +73,6 @@ struct S_Splash : State
 	}
 };
 
-
 struct S_Test : State
 {
 	ThingSet set;
@@ -81,7 +85,8 @@ struct S_Test : State
 		w.ec->addEffector(new Eff_Gravity());
 		pr = set.instantiate(new Player());
 		pl = set.instantiate(new Platform());
-		set.instantiate(new FizThing({common::frand()*12-6, -3}));
+		std::srand(FD::time);
+		set.instantiate(new Fighter({common::frand()*12-6, -3}));
 	}
 	void load() override
 	{
@@ -90,16 +95,46 @@ struct S_Test : State
 	}
 	void loop() override
 	{
+		static float scd = 2;
+		if(scd<0)
+		{
+			scd = common::frand()+1;
+			float m = .5+common::frand()*1.5;
+			//set.instantiate(new Fighter({common::frand()*12-6, -10}, {m,m}, m));
+		}
+		scd -= FD::delta;
+
+		static float hcd = 2;
+		if(hcd<0)
+		{
+			hcd = common::frand()+2;
+			set.instantiate(new Hazard(common::frand()*12-6));
+		}
+		hcd -= FD::delta;
+
 		w.step(FD::delta);
 		set.update();
 		set.render();
+		SetColour({0,0,0,255});
+		v2i pp = Thing2D::spaceToScr({Platform::instance->getBalancePointX(), 0});
+		FillCircle(pp.x, pp.y, 3);
+		pp = Thing2D::spaceToScr({Platform::instance->getLimitsH().first, 0});
+		FillCircle(pp.x, pp.y, 4);
+		pp = Thing2D::spaceToScr({Platform::instance->getLimitsH().second, 0});
+		FillCircle(pp.x, pp.y, 4);
 	}
 	void onKey(SDL_Keycode key) override
 	{
 		switch(key)
 		{
-			case SDLK_SPACE:
-				pr->b->vel.y = 5;
+			case SDLK_z:
+				pr->jump();
+				break;
+			case SDLK_x:
+				pr->attack(v2f(pr->dir, 0));
+				break;
+			case SDLK_c:
+				pr->flop();
 				break;
 		}
 	}

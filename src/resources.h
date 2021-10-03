@@ -6,7 +6,7 @@
 
 static inline SDL_Colour hexc(int c) { return {Uint8(c>>16), Uint8((c>>8) & 0xFF), Uint8(c & 0xFF),255}; }
 
-inline SDL_Texture* SHEET_LOGO;
+inline SDL_Texture* SHEET_LOGO, *T_PLATFORM;
 inline SDL_Colour C_BG = hexc(0x1c2638), C_DICK=hexc(0x9b222b), C_HORNS=hexc(0xf14e52), C_WALLS=hexc(0x23495d);
 inline Mix_Chunk* S_SPLASH;
 
@@ -31,6 +31,8 @@ inline void loadResources()
 
 	SHEET_LOGO = loadTexture("logo.png");
 	S_SPLASH = loadSound("splash.wav");
+
+	T_PLATFORM = loadTexture("platform.png");
 
 	RenderData::loadFont("res/ProggyTiny.ttf", 12);
 	RenderData::loadFont("res/nicomoji-plus_1.11.ttf", 12);
