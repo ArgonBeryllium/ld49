@@ -1,6 +1,7 @@
 #pragma once
 #include "objects.h"
 #include "fighter.h"
+#include <cumt/cumt_audio.h>
 
 void shakeCam(float, float);
 struct Hazard : FizThing
@@ -16,6 +17,7 @@ struct Hazard : FizThing
 			Fighter* f = dynamic_cast<Fighter*>(FizThing::lookup[other]);
 			if(f) f->takeDamage(.8);
 			shakeCam(.2, .5);
+			audio::play(S_HAZARD_HIT, .3);
 		};
 		b->postCollision = [](CollisionData cd, Body* self, Body* other)
 		{

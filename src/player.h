@@ -1,6 +1,7 @@
 #pragma once
 #include "fighter.h"
 #include "effects.h"
+#include <cumt/cumt_audio.h>
 #include <cumt/cumt_common.h>
 #include <shitrndr.h>
 
@@ -21,6 +22,7 @@ struct Player : Fighter
 			instance->flopped = 1;
 			instance->parent_set->instantiate(new Attack(instance, instance->pos, instance->a_strength*2, .3, {3,2}));
 			instance->parent_set->instantiate(new PunchFX(instance->pos, instance->a_strength*2, {3,2}));
+			audio::play(S_HAZARD_HIT, .3);
 			shakeCam(.3, .3);
 		}
 	};
@@ -36,11 +38,12 @@ struct Player : Fighter
 	{
 		shakeCam(d);
 		health -= d;
+		audio::play(S_HIT);
 	}
 	void die() override;
 	void flop()
 	{
-		if(Platform::instance->onPlatform(b, 1) || t_flop > 0) return;
+		if(Platform::instance->onPlatform(b, 1) || t_flop > 0 || floppin) return;
 		b->vel = {0, -50};
 		floppin = 1;
 		t_flop = 2;
@@ -56,6 +59,7 @@ struct Player : Fighter
 	void update() override
 	{
 		if(t_flop>0) t_flop -= FD::delta;
+		else if (floppin) floppin = 0;
 		if(flopped)
 		{
 			flopped = 0;

@@ -29,6 +29,7 @@ void Player::die()
 {
 	b->tr.pos = {0, 4};
 	S_Level::instance->scheduleReload();
+	audio::play(S_DIE);
 }
 
 World* FizThing::wld = 0;

@@ -7,6 +7,8 @@
 #include <SDL2/SDL_keycode.h>
 #include <shitrndr.h>
 
+void rtc(v2i pos, std::string t, render::TextData td = TD_DEF_C);
+
 struct Wave
 {
 	bool started = false;
@@ -105,7 +107,6 @@ struct S_Level : State
 	void load() override
 	{
 		instance = this;
-		bg_col = {C_BG};
 		Thing2D::view_scale = .6;
 		std::srand(FD::time);
 
@@ -117,7 +118,24 @@ struct S_Level : State
 			case 0:
 				level = Level({Wave({new Minion({4, -20})}),
 						Wave({new Hazard(0)}),
-						Wave({new Minion({-4, -20}), new Minion({4, -10})})});
+						Wave({new Minion({-4, -10}), new Minion({4, -10})})});
+				break;
+			case 1:
+				level = Level({Wave({new Brute({4, -20})}),
+						Wave({new Hazard(-4), new Hazard(4)}),
+						Wave({new Minion({-4, -20}), new Minion({4, -10}), new Brute({0, -15})})});
+				break;
+			case 2:
+				level = Level({Wave({new Minion({-4, -20}), new Minion({4, -10}), new Brute({-3, -15}), new Brute({3, -15})}),
+						Wave({new Minion({-8, -10}), new Minion({-6,-15}), new Minion({-4,-20}), new Minion({0,-35})})});
+				break;
+			case 3:
+				level = Level({Wave({new Hazard(-5), new Hazard(5)}),
+						Wave({new Hazard(-3), new Hazard(3)}),
+						Wave({new Hazard(0)}),
+						Wave({new Boss({0, -10})}),
+						Wave({new Hazard(0)})});
+
 				break;
 		}
 	}
@@ -132,6 +150,8 @@ struct S_Level : State
 		level.update();
 
 		shakeUpdate();
+		SetColour(C_BG);
+		SDL_RenderFillRect(ren, 0);
 		v2i vp = Thing2D::spaceToScr({});
 		Copy(T_BG, {vp.x-WindowProps::getWidth()/2, vp.y+128-WindowProps::getHeight()/2, WindowProps::getWidth(), WindowProps::getHeight()});
 		set.render();
@@ -163,9 +183,6 @@ struct S_Level : State
 			case SDLK_r:
 				reload();
 				break;
-			case SDLK_BACKSPACE:
-				level.win();
-				break;
 		}
 	}
 };
@@ -179,32 +196,36 @@ struct S_Win : State
 	}
 	void loop() override
 	{
-		SDL_RenderCopy(ren, T_BG, 0, 0);
-		render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/4}, "You Won", TD_DEF_C);
+		Copy(T_BG, WindowProps::getSizeRect());
 		render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/3}, "Thanks for playing", TD_DEF_C);
 		render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/2}, "Made by ArBe for Ludum Dare #49", TD_DEF_C);
-		render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/3*2}, "Press [Q] to quit", TD_DEF_C);
+		render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/5*4}, "Press [Q] to quit", TD_HL);
 	}
 };
 struct S_Loader : State
 {
 	float st;
+	int max = 4;
 	void load() override
 	{
 		st = FD::time;
+		bg_col = C_BLACK;
 	}
 	void loop() override
 	{
-		render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/2}, "Level "+std::to_string(Level::level_i+1), TD_DEF_C);
+		render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/2}, Level::level_i==max?"You Won":"Level "+std::to_string(Level::level_i+1), TD_HL);
 		if(FD::time-st>3)
-			render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/2+10}, "Press [Return] to continue", TD_DEF_C);
+			render::text({WindowProps::getWidth()/2, WindowProps::getHeight()/2+20}, "Press [Return] to continue", TD_DEF_C);
 	}
 	void onKey(SDL_Keycode key) override
 	{
 		if(key!=SDLK_RETURN) return;
-		//if(S_Level::instance->index<1)
-		//	setActive(S_Level::instance->index);
-		//else
+		if(Level::level_i!=max)
+		{
+			S_Level::instance->scheduleReload();
+			setActive(S_Level::instance->index);
+		}
+		else
 			setActive(S_Win::instance->index);
 	}
 };
@@ -219,4 +240,121 @@ struct S_TextCrawl : State
 	
 	void load() override;
 	void loop() override;
+};
+
+struct S_Menu : State
+{
+	struct menuItem
+	{
+		const char* name;
+		void(*onClicked)();
+	};
+
+	std::vector<menuItem> items;
+	int sel = 0;
+	float so = 0, sot = 0;
+	void start() override
+	{
+		items.push_back({"START", [](){State::setActive(3);}});
+		items.push_back({"CONTROLS", [](){State::setActive(7);}});
+		items.push_back({"CREDITS", [](){State::setActive(6);}});
+		items.push_back({"QUIT", [](){SDL_Quit(); std::exit(0);}});
+	}
+	void loop() override
+	{
+		int W = WindowProps::getWidth();
+		int H = WindowProps::getHeight();
+		rtc({W/2, H/3}, "Mountain of Might", TD_HL);
+		float c = std::sin(FD::time*.25)*std::sin(FD::time*.2);
+		if(sot>0)
+		{
+			sot -= FD::delta;
+			so = easings::easeInElastic(sot);
+		}
+		else so = 0;
+		for(int i = 0; i != items.size(); i++)
+		{
+			std::string t = items[i].name;
+			if(i==sel) t= "> "+t+" <";
+			rtc({W/2+(i==sel?int(so*10):0), H/2+int(H/5/items.size()*i)}, t, TD_DEF_C);
+		}
+	}
+	void onKey(SDL_Keycode key) override
+	{
+		switch(key)
+		{
+			case SDLK_RETURN:
+				audio::play(S_BEEP);
+				items[sel].onClicked();
+				break;
+			case SDLK_UP:
+			case SDLK_w:
+				audio::play(S_BOOP);
+				sot = 1;
+				sel--;
+				while(sel<0)sel+=items.size();
+				sel %= items.size();
+				break;
+			case SDLK_DOWN:
+			case SDLK_s:
+				audio::play(S_BOOP);
+				sot = 1;
+				sel++;
+				sel %= items.size();
+				break;
+		}
+	}
+};
+struct S_Credits : State
+{
+	void load() override
+	{
+		bg_col = C_BLACK;
+	}
+	void loop() override
+	{
+		int W = WindowProps::getWidth();
+		int H = WindowProps::getHeight();
+		rtc({W/2, H/4}, "CREDITS", TD_HL);
+		rtc({W/2, int(H*.4)}, "This game was made", TD_DEF_C);
+		rtc({W/2, int(H*.5)}, "within 48 hours", TD_DEF_C);
+		rtc({W/2, int(H*.6)}, "by ArBe (@argon_beryllium)", TD_DEF_C);
+		rtc({W/2, int(H*.7)}, "for Ludum Dare 49.", TD_DEF_C);
+		rtc({W/2, int(H*.9)}, "> BACK <", TD_DEF_C);
+	}
+	void onKey(SDL_Keycode key) override
+	{
+		if(key==SDLK_RETURN)
+		{
+			audio::play(S_BEEP);
+			State::setActive(2);
+		}
+	}
+};
+struct S_Controls : State
+{
+	void load() override
+	{
+		bg_col = C_BLACK;
+	}
+	void loop() override
+	{
+		int W = WindowProps::getWidth();
+		int H = WindowProps::getHeight();
+		rtc({W/2, H/4}, "CONTROLS", TD_HL);
+		rtc({W/2, int(H*.4)}, "ARROW KEYS - move", TD_DEF_C);
+		rtc({W/2, int(H*.5)}, "[Z] - jump", TD_DEF_C);
+		rtc({W/2, int(H*.6)}, "[X] - punch", TD_DEF_C);
+		rtc({W/2, int(H*.7)}, "[C] - drop (watch cooldown below HP bar)", TD_DEF_C);
+		rtc({W/2, int(H*.8)}, "Health regenerates automatically, both for you and your enemies.", TD_DEF_C);
+		rtc({W/2, int(H*.95)}, "> BACK <", TD_DEF_C);
+	}
+	void onKey(SDL_Keycode key) override
+	{
+		if(key==SDLK_RETURN)
+		{
+			audio::play(S_BEEP);
+			State::setActive(2);
+		}
+	}
 };

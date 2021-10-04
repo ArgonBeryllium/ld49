@@ -30,7 +30,7 @@ struct PunchFX : Particles2D
 {
 	float st;
 	v2f vels[20] = {};
-	PunchFX(v2f pos_, float str, v2f scl_ = {1,1}) : Particles2D(20), st(FD::time)
+	PunchFX(v2f pos_, float str, v2f scl_ = {1,1}) : Particles2D(20*str), st(FD::time)
 	{
 		for(int i = 0; i != count; i++)
 		{

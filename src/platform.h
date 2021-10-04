@@ -1,5 +1,6 @@
 #pragma once
 #include "objects.h"
+#include "effects.h"
 
 struct Platform : FizThing
 {

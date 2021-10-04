@@ -38,9 +38,11 @@ struct Fighter : FizThing
 		b->vel.y = jump_h;
 		b->vel.x *= .8;
 		Platform::instance->applyForce(b->tr.pos.x, b->mass*.1);
+		audio::play(S_JUMP, .4);
 	}
 	virtual void takeDamage(float d)
 	{
+		audio::play(S_HIT, .3);
 		health -= d;
 	}
 	virtual void die()
@@ -80,7 +82,7 @@ struct Fighter : FizThing
 				if(cumt::aabb::getOverlap(getRect(), o->getRect()))
 				{
 					o->takeDamage(strength);
-					o->b->vel = (o->b->tr.pos-(pos*v2f(1,-1))).normalised()*strength*50/o->b->mass;
+					o->b->vel = (o->b->tr.pos-(pos*v2f(1,-1))).normalised()*strength*10/o->b->mass;
 					life = 0;
 					parent_set->instantiate(new PunchFX(pos-scl, strength, scl));
 					break;
@@ -93,7 +95,8 @@ struct Fighter : FizThing
 	{
 		if(t_ac>0) return;
 		t_ac = a_cooldown;
-		parent_set->instantiate(new Attack(this, pos+dir*scl.x, a_strength));
+		parent_set->instantiate(new Attack(this, pos+dir, a_strength));
+		audio::play(S_SWING, .1);
 	}
 	void render() override
 	{

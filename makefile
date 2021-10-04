@@ -2,11 +2,11 @@ SHELL=/bin/bash
 
 CXX=clang++
 CXX_LIBS=-lcumt -lfizzyx -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
-CXX_FLAGS=--std=c++17 -g
+CXX_FLAGS=--std=c++17 -O3
 
 MINGW=x86_64-w64-mingw32-g++
 MINGW_LIBS=-lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
-MINGW_FLAGS=--std=c++17 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -fpermissive
+MINGW_FLAGS=--std=c++17 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -fpermissive -O3
 
 test: src/*
 	cowsay 'optimise the final build, dipshit'

@@ -71,7 +71,7 @@ struct S_Splash : State
 	}
 	void onKey(SDL_Keycode key) override
 	{
-		State::setActive(1);
+		if(nactive!=1) State::setActive(1);
 	}
 };
 
@@ -84,7 +84,7 @@ void gameStart()
 	loadResources();
 
 	//State::states = {new S_Splash(), new S_Level()};
-	State::states = {new S_Splash(), new S_Level(), new S_Loader(), new S_Win()};
+	State::states = {new S_Splash(), new S_TextCrawl("Deep in the mountains lays the origin of many a legend.#The local peaks have been said to house\nwhole pantheons of various spirits\nand fantasy creatures.#But one peak stands apart from its neighbours -#The Mountain of Might.#After a trecherous hike,\ntrials undreamt of by most people,\nawaits a final test.#...#Hey, can we just agree to\npretend I wrote a complete, moody intro?\nI don't really have time to spare\nat the moment.\nThanks!#Anyway, TL;DR buff guys go up the mountain\nto fight for honour or something.", 2), new S_Menu(), new S_Level(), new S_Loader(), new S_Win(), new S_Credits(), new S_Controls()};
 	State::allStart();
 }
 
@@ -92,10 +92,8 @@ void gameLoop()
 {
 	State::getActive()->loop();
 	State::update();
-	SetColour({0,0,0,255});
-	FillRect({0,0,10,22});
-	common::renderFPS({});
-	render::text({5,6}, std::to_string(State::getActive()->index), TD_DEF_L);
+	//common::renderFPS({});
+	//render::text({5,6}, std::to_string(State::getActive()->index), TD_DEF_L);
 	//render::text({5,12}, std::to_string(Player::instance->parent_set->things_id.size()), TD_DEF_L);
 }
 void gameKeyDown(const SDL_Keycode& key)

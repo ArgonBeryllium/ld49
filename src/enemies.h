@@ -19,7 +19,8 @@ struct Minion : Fighter
 		v2f tv = Player::instance->pos-pos;
 		if(tv.getLengthSquare()<8)
 		{
-			attack(tv.normalised());
+			if(std::rand()%20==0)
+				attack(tv.normalised());
 			dir = tv.x/std::abs(tv.x);
 		}
 		else
@@ -74,10 +75,12 @@ struct Brute : Minion
 {
 	Brute(v2f pos_) : Minion(pos_, {2,2}, 3)
 	{
-		//acc = 7;
-		a_strength = .7;
-		a_cooldown = 1;
-		health = health_max = 2;
+		acc = 7;
+		jump_h = 4;
+		a_strength = .4;
+		a_cooldown = .8;
+		health = health_max = 3;
+		b->bitmask = 0b00000100;
 	}
 	void render() override
 	{

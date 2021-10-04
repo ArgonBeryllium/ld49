@@ -11,10 +11,10 @@ inline SDL_Texture* SHEET_LOGO,
 	   *T_PLATFORM, *T_P_IDLE, **T_P_RUN, *T_P_PUNCH, *T_P_CROUCH, *T_P_AIRBORNE, *T_P_FALL,
 	   *T_B_IDLE, **T_B_RUN, *T_B_PUNCH, *T_B_AIRBORNE,
 	   *T_BG, *T_MT, *T_HAZARD;
-inline SDL_Colour C_BG = hexc(0xff7777), C_WHITE = hexc(0xffffff);
-inline Mix_Chunk* S_SPLASH, *S_TEXT_BLEEP;
+inline SDL_Colour C_BG = hexc(0xff7777), C_WHITE = hexc(0xffffff), C_BLACK = hexc(0x0000000);
+inline Mix_Chunk* S_SPLASH, *S_TEXT_BLEEP, *S_BEEP, *S_BOOP, *S_JUMP, *S_SWING, *S_HIT, *S_DIE, *S_HAZARD_HIT;
 
-inline cumt::render::TextData TD_DEF_L, TD_DEF_C, TD_DEF_R, TD_JP_C;
+inline cumt::render::TextData TD_DEF_L, TD_DEF_C, TD_DEF_R, TD_HL;
 
 inline SDL_Texture* loadTexture(const char* path)
 {
@@ -36,7 +36,15 @@ inline void loadResources()
 	SHEET_LOGO = loadTexture("logo.png");
 	S_SPLASH = loadSound("splash.wav");
 
-	S_TEXT_BLEEP = loadSound("bleep.wav");
+	S_BEEP = loadSound("beep.wav");
+	S_BOOP = loadSound("boop.wav");
+	S_TEXT_BLEEP = S_BOOP;
+	S_JUMP = loadSound("Jump.wav");
+	S_SWING = loadSound("swing.wav");
+	S_HIT = loadSound("Hit.wav");
+	S_DIE = loadSound("Die.wav");
+	S_HAZARD_HIT = loadSound("Hazard_Hit.wav");
+
 
 	T_PLATFORM   = loadTexture("platform.png");
 
@@ -56,11 +64,10 @@ inline void loadResources()
 	T_B_PUNCH     = loadTexture("brute4.png");
 	T_B_AIRBORNE = loadTexture("brute5.png");
 
-	RenderData::loadFont("res/ProggyTiny.ttf", 14);
-	RenderData::loadFont("res/nicomoji-plus_1.11.ttf", 12);
+	RenderData::loadFont("res/ProggyTiny.ttf", 16);
 	RenderData::loadFont("res/m6x11.ttf", 14);
 	TD_DEF_L = render::TextData{0, render::TextData::LEFT  };//, {1,1}, 0, {0,0,0,255}};
 	TD_DEF_C = render::TextData{0, render::TextData::CENTRE};//, {1,1}, 0, {0,0,0,255}};
 	TD_DEF_R = render::TextData{0, render::TextData::RIGHT };//, {1,1}, 0, {0,0,0,255}};
-	TD_JP_C = render::TextData{1, render::TextData::CENTRE};
+	TD_HL = render::TextData{1, render::TextData::CENTRE, {1,1}, 0, C_BG};
 }
