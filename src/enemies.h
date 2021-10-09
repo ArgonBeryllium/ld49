@@ -119,6 +119,7 @@ struct Boss : Brute
 			else if(!Platform::instance->onPlatform(b->b)) b->tex = T_B_AIRBORNE;
 			else if(common::inVec().x) b->tex = T_B_RUN[int(FD::time*4)%2];
 			else b->tex = T_B_IDLE;
+
 			if(t>tl-1)
 			{
 				t -= tl-1;
@@ -146,7 +147,7 @@ struct Boss : Brute
 			if(ff)
 			{
 				ff = 0;
-				op = b->pos;
+				op = {0,5};
 				os = b->scl;
 				wld->removeBody(b->b);
 				return;
@@ -159,25 +160,28 @@ struct Boss : Brute
 			else
 			{
 				t -= 1;
-				if(std::rand()%40==0)
+				if(std::rand()%50==0)
 					b->parent_set->instantiate(new Hazard((common::frand()*2-1)*Platform::instance->scl.x));
 			}
-			if(t>4)
+			if(t>4 && t<5)
 			{
 				t -= 4;
-				b->pos = common::lerp(b->pos, op, t);
+				b->pos = common::lerp(b->pos, op*v2f(1,-1), t);
 				b->scl = common::lerp(b->scl, os, t);
+				return;
 			}
-			if(FD::time-st > 5)
+			if(t >= 5)
 			{
 				Boss::inst->setActive(0);
-				b->scl = os;
+				b->b->tr.scl = os;
+				b->b->tr.pos = op;
+				b->b->vel *= 0;
 				wld->addBody(b->b);
 				ff = 1;
 			}
 		}
 	};
-	BossState* states[3]{new BS_Def(), new BS_Wee(), new BS_Def()};
+	BossState* states[2]{new BS_Def(), new BS_Wee()};
 
 	void setActive(int i)
 	{
@@ -189,6 +193,7 @@ struct Boss : Brute
 	{
 		inst = this;
 		health = health_max = 4;
+		acc = 10;
 		setActive(0);
 	}
 	~Boss()
